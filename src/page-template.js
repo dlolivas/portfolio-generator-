@@ -1,4 +1,4 @@
-const generatePage = (name, github) => {
+module.exports = (name, github) => {
     return `
     <!DOCTYPE html> 
     <html lang="en"> 
@@ -17,7 +17,7 @@ const generatePage = (name, github) => {
     `;
   };
 
-module.exports = generatePage;
+
 
 /*Notes----------------
 In order to use functions from one module inside another, we use the related statements module.exports and require. 
