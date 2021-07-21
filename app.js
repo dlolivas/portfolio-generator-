@@ -1,6 +1,6 @@
-const fs = require('fs');
 const inquirer = require('inquirer');
 const generatePage = require('./src/page-template');
+const { writeFile, copyFile } = require('./utils/generate-site');
 
 const promptUser = () => {
   return inquirer.prompt([
@@ -126,16 +126,25 @@ Add a New Project
     });
 };
 
-promptUser()
-  .then(promptProject)
-  .then(portfolioData => {
-    const pageHTML = generatePage(portfolioData);
+promptUser()//We start by asking the user for their information with Inquirer prompts; this returns all of the data as an object in a Promise.
+  .then(promptProject)//The promptProject() function captures the returning data from promptUser() and we recursively call promptProject() for as many projects as the user wants to add. Each project will be pushed into a projects array in the collection of portfolio information, and when we're done, the final set of data is returned to the next .then().
+  .then(portfolioData => {//The finished portfolio data object is returned as portfolioData and sent into the generatePage() function, which will return the finished HTML template code into pageHTML.
 
-    fs.writeFile('./index.html', pageHTML, err => {
-      if (err) throw new Error(err);
 
-      console.log('Page created! Check out index.html in this directory to see it!');
-    });
+    return generatePage(portfolioData);
+  })
+  .then(pageHTML => {//We pass pageHTML into the newly created writeFile() function, which returns a Promise. This is why we use return here, so the Promise is returned into the next .then() method.
+    return writeFile(pageHTML);
+  })
+  .then(writeFileResponse => {//Upon a successful file creation, we take the writeFileResponse object provided by the writeFile() function's resolve() execution to log it, and then we return copyFile().
+    console.log(writeFileResponse);
+    return copyFile();
+  })
+  .then(copyFileResponse => {//The Promise returned by copyFile() then lets us know if the CSS file was copied correctly, and if so, we're all done!
+    console.log(copyFileResponse);
+  })
+  .catch(err => {//incase of errs
+    console.log(err);
   });
     
     // const pageHTML = generatePage(portfolioData);
@@ -211,6 +220,51 @@ the function def has 4 arguments.
 1: is the name of the file that's being created
 2nd: the data that will write onto the file ex( html string template)
 3rd: is a callback function that will be used for error handling. 
+
+
+.copyFile ()
+
+- We have to rpovide 3 sets of arguments 
+1. The src file's location, so they know what file we want to copy 
+2. The copied file's intended destination and name 
+3. A callback function to execute on either completion or error, which accepts an error obj as a parameter so that we can check if something went worng.
+ex: 
+fs.copyFile('./src/style.css', './dist/style.css' , err => {
+    if (err) {
+        console.log(err);
+        return;
+    }
+    console.log('Style sheet copied successfully!');
+});
+- this will find the style.css in the src dir and create a copy of it in the ids directory. We can rename it to whatever we want upon copying but the style.css seems to make the most sense. Then if there's an err we'll let the user know and stop the .copyFile() methond from running with a return statement.
+In order for the code to execute it was to run inside the callback function for fs.writefile(). Because we know that the .writeFile() method will successfully create the HTML file before we even attempt to copy the CSS fle
+
+
+Promises and CallBack functions!
+- They are two ways to hangle asynchronoys code in JS which are Callbacks and Promises 
+Callback functions
+- browser event handling such as clicks form submissions and change events 
+- timers like settimeout and setInterval, where we instruct the code to be execute a function after a certain amount of itme or on a schedule
+- the fs library methos when we instruct the computer to work with the file system in some way, and when it's done, it executes a function we provide to let us know how it went.
+
+Promises
+- hTTP reuqests using the browser's fetch() functionality (once to make the request and get a response and then again to convert the response data to JSON format)
+- inquierer which packages up answers into an obj and returns in into the function we include in the .then() method.
+
+EX.
+// asynchronous functionality using a callback function
+fs.writeFile('filename.txt', 'content for file', function(err) {
+  // this is the callback function that executes after the file is done being written
+});
+
+// asynchronous functionality using Promises
+fetch('https://api.github.com/users/lernantino/repos')
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(githubData) {
+    console.log(githubData);
+  });
 
  */
 
